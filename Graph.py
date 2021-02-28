@@ -70,7 +70,26 @@ class Graph:
             for neighbor in self.edge[min_node]:
                 if neighbor in node_set:
                     alt = min_dist + self.distance[(min_node, neighbor)]
-                    print(neighbor)
+
+                    if alt < dist[neighbor]:
+                        dist[neighbor] = alt
+                        prev[neighbor] = min_node
+
+        # re-construct path
+        path = [end_node]
+        node = end_node
+        while True:
+            # iterate backwards through list
+            node = prev[node]
+
+            # insert node in to front
+            path.insert(0, node)
+
+            # exit if at starting node
+            if node is start_node:
+                break
+
+        return path, dist[end_node]
 
     # plot nodes
     def plot_graph(self):
