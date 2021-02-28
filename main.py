@@ -20,3 +20,5 @@ G.add_edge('D', 'F', 15)
 
 # run Dijkstra
 path, dist = G.dijkstra('A', 'F')
+
+test
