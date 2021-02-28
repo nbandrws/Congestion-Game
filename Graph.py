@@ -13,7 +13,7 @@ class Graph:
     def add_node(self, value):
         self.node.add(value)
 
-    # add edge
+    # add edge (assumes edges are bi-directional)
     def add_edge(self, from_node, to_node, distance):
         self.edge[from_node].append(to_node)
         self.edge[to_node].append(from_node)
@@ -40,9 +40,6 @@ class Graph:
 
     # Dijkstra's algorithm
     def dijkstra(self, start_node, end_node):
-        visited = {start_node: 0} # {node: distance from start_node}
-        path = {}
-
         # dynamic node set
         node_set = set(self.node)
 
@@ -70,7 +67,26 @@ class Graph:
             for neighbor in self.edge[min_node]:
                 if neighbor in node_set:
                     alt = min_dist + self.distance[(min_node, neighbor)]
-                    print(neighbor)
+
+                    if alt < dist[neighbor]:
+                        dist[neighbor] = alt
+                        prev[neighbor] = min_node
+
+        # re-construct path
+        path = [end_node]
+        node = end_node
+        while True:
+            # iterate backwards through dict
+            node = prev[node]
+
+            # insert node to front
+            path.insert(0, node)
+
+            # exit if at starting node
+            if node is start_node:
+                break
+
+        return path, dist[end_node]
 
     # plot nodes
     def plot_graph(self):
