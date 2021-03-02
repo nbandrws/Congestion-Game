@@ -1,7 +1,8 @@
 from collections import defaultdict
+import matplotlib as mpl
+import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import networkx as nx
-import pandas as pd
 
 
 class Game:
@@ -101,28 +102,30 @@ class Game:
     # plot network
     def plot(self):
         # build edge lists
-        from_list = []
-        to_list = []
-        dist_list = []
-        label_dict = defaultdict(list)
+        edges = []
+        dists = []
+        labels = defaultdict(list)
         for from_node in self.node:
             for to_node in self.edge[from_node]:
-                if to_node not in from_list:
-                    from_list.append(from_node)
-                    to_list.append(to_node)
-                    dist_list.append(self.distance[(from_node, to_node)])
-                    label_dict[(from_node, to_node)] = self.distance[(from_node, to_node)]
+                if to_node not in [item[0] for item in edges]:
+                    edges.append([from_node, to_node])
+                    dists.append(self.distance[(from_node, to_node)])
+                    labels[(from_node, to_node)] = self.distance[(from_node, to_node)]
 
-        # build dataframe
-        df = pd.DataFrame({'from': from_list, 'to': to_list, 'value': dist_list})
+        # setup colormap
+        norm = mpl.colors.Normalize(vmin=min(dists), vmax=max(dists))
+        mapper = cm.ScalarMappable(norm=norm, cmap=plt.get_cmap('jet'))
 
-        # build graph
-        g = nx.from_pandas_edgelist(df, 'from', 'to', create_using=nx.Graph())
+        # build graph and set colors
+        G = nx.Graph()
+        idx = 0
+        for edge in edges:
+            G.add_edge(edge[0], edge[1], color=mapper.to_rgba(dists[idx]))
+            idx += 1
+        colors = nx.get_edge_attributes(G, 'color').values()
+        pos = nx.spring_layout(G)
 
-        # customize
-        pos = nx.spring_layout(g)
-        nx.draw(g, with_labels=True, node_color='skyblue', node_size=1500, edge_color=df['value'], width=10.0,
-                edge_cmap=plt.cm.Blues)
-        nx.draw_networkx_edge_labels(g, pos, edge_labels=label_dict)
-        plt.axis('off')
-        plt.show()
+        # plot
+        nx.draw_networkx(G, pos, with_labels=True, node_color='skyblue', edge_color=colors, node_size=500, width=10.0)
+        plt.colorbar(mapper, label='Cost')
+        plt.title('Congestion Network: ' + self.start_node + ' to ' + self.end_node)
