@@ -1,7 +1,8 @@
-from Graph import Graph
+from Game import Game
 
 # build network
-G = Graph()
+G = Game()
+G.path('A', 'F')
 G.add_node('A')
 G.add_node('Z')
 G.add_node('B')
@@ -19,6 +20,5 @@ G.add_edge('X', 'Z', 50)
 G.add_edge('D', 'F', 15)
 
 # run Dijkstra
-path, dist = G.dijkstra('A', 'F')
-
-test
+path, dist = G.dijkstra()
+# G.plot()
