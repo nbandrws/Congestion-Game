@@ -15,7 +15,7 @@ class Game:
         self.num_edge = {}  # number of players on edge
         self.start_node = None
         self.end_node = None
-        self.num_players = None
+        self.num_players = None  # number of players in game
 
     # add node
     def add_node(self, value):
@@ -32,7 +32,7 @@ class Game:
         self.edge[to_node].append(from_node)
         self.cost[(from_node, to_node)] = cost
         self.cost[(to_node, from_node)] = cost
-        self.num_edge[(from_node, to_node)] = 0
+        self.num_edge[(from_node, to_node)] = 0  # initialize number of players on edge to 0
         self.num_edge[(to_node, from_node)] = 0
 
     # find the vertex with minimum cost from source, from the set of
@@ -81,7 +81,7 @@ class Game:
             # loop over neighbors that are still in node_set
             for neighbor in self.edge[min_node]:
                 if neighbor in node_set:
-                    alt = min_cost + self.cost[(min_node, neighbor)]
+                    alt = min_cost + self.cost[(min_node, neighbor)](self.num_edge[(min_node, neighbor)])
 
                     if alt < cost_log[neighbor]:
                         cost_log[neighbor] = alt
@@ -97,11 +97,19 @@ class Game:
             # insert node to front
             path.insert(0, node)
 
+            # update number of players on path
+            self.num_edge[(path[0], path[1])] += 1
+            self.num_edge[(path[1], path[0])] += 1
+
             # exit if at starting node
             if node is self.start_node:
                 break
 
         return path, cost_log[self.end_node]
+
+    # find Nash
+    def nash(self):
+        None
 
     # plot network
     def plot(self):
