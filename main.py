@@ -20,5 +20,5 @@ G.add_edge('X', 'Z', 50)
 G.add_edge('D', 'F', 15)
 
 # run Dijkstra
-path, dist = G.dijkstra()
+path, cost = G.dijkstra()
 G.plot()
