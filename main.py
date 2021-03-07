@@ -1,25 +1,18 @@
-from Game import Game
+# import game definition files
+from def_dummy import def_dummy
+from def_braess import def_braess
 
 # build network
-G = Game()
-G.num_players = 1
-G.path('A', 'F')
-G.add_node('A')
-G.add_node('Z')
-G.add_node('B')
-G.add_node('C')
-G.add_node('D')
-G.add_node('F')
-G.add_node('X')
-G.add_edge('A', 'B', lambda x: 3)
-G.add_edge('A', 'Z', lambda x: 25)
-G.add_edge('B', 'C', lambda x: 10 * x)
-G.add_edge('B', 'D', lambda x: 2)
-G.add_edge('C', 'F', lambda x: 1)
-G.add_edge('D', 'C', lambda x: 2)
-G.add_edge('X', 'Z', lambda x: 50)
-G.add_edge('D', 'F', lambda x: 15)
+num_players = 4000
 
-# run Dijkstra
-path, cost = G.dijkstra()
-# G.plot()
+# dummy
+# g = def_dummy(num_players)
+# path1, total_cost1 = g.dijkstra()
+# path2, total_cost2 = g.dijkstra()
+# costs, paths = g.nash()
+# g.plot()
+
+# Braess'
+no_braess, braess = def_braess(num_players)
+nb_cost, nb_path = no_braess.nash()
+n_cost, n_path = braess.nash()

@@ -8,14 +8,18 @@ import networkx as nx
 class Game:
 
     # initialize
-    def __init__(self):
+    def __init__(self, num_players=1, start_node='start', end_node='end'):
         self.node = set()
         self.edge = defaultdict(list)  # will generate key for dictionary if empty when trying to append
         self.cost = {}  # cost function
         self.num_edge = {}  # number of players on edge
-        self.start_node = None
-        self.end_node = None
-        self.num_players = None  # number of players in game
+        self.num_players = num_players  # number of players in game
+
+        # construct start and end points
+        self.start_node = start_node
+        self.add_node(start_node)
+        self.end_node = end_node
+        self.add_node(end_node)
 
     # add node
     def add_node(self, value):
@@ -40,9 +44,9 @@ class Game:
     # branch to explore next
     @staticmethod
     def min_cost(cost, node_set):
-
         # initialize minimum cost for next node
         min_cost = float('inf')
+        min_node = None
 
         # search vertex not in the shortest path tree
         for u in node_set:
@@ -81,7 +85,8 @@ class Game:
             # loop over neighbors that are still in node_set
             for neighbor in self.edge[min_node]:
                 if neighbor in node_set:
-                    alt = min_cost + self.cost[(min_node, neighbor)](self.num_edge[(min_node, neighbor)])
+                    # +1 to cost to account for current player
+                    alt = min_cost + self.cost[(min_node, neighbor)](self.num_edge[(min_node, neighbor)] + 1)
 
                     if alt < cost_log[neighbor]:
                         cost_log[neighbor] = alt
@@ -105,24 +110,39 @@ class Game:
             if node is self.start_node:
                 break
 
-        return path, cost_log[self.end_node]
+        total_cost = cost_log[self.end_node]
+        return path, total_cost
 
-    # find Nash
     def nash(self):
-        None
+        # compute Nash through sequential dijkstra best response calculations
+        path_pp = []  # path per player
+        for _ in range(self.num_players):
+            path = self.dijkstra()[0]
+            path_pp.append(path)
+
+        # sum up cost to each player after all players have played
+        cost_pp = []  # cost per player
+        for path in path_pp:
+            total_cost = 0
+            for idx, node in enumerate(path):
+                if node is not path[-1]:
+                    num_on_edge = self.num_edge[(path[idx], path[idx + 1])]
+                    total_cost += self.cost[(path[idx], path[idx + 1])](num_on_edge)
+                else:
+                    cost_pp.append(total_cost)
+
+        return cost_pp, path_pp
 
     # plot network
     def plot(self):
         # build edge lists
         edges = []
         costs = []
-        labels = defaultdict(list)
         for from_node in self.node:
             for to_node in self.edge[from_node]:
                 if to_node not in [item[0] for item in edges]:
                     edges.append([from_node, to_node])
                     costs.append(self.cost[(from_node, to_node)])
-                    labels[(from_node, to_node)] = self.cost[(from_node, to_node)]
 
         # setup colormap
         norm = mpl.colors.Normalize(vmin=min(costs), vmax=max(costs))
