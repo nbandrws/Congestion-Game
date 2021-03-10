@@ -15,4 +15,6 @@ num_players = 4000
 # Braess'
 no_braess, braess = def_braess(num_players)
 nb_cost, nb_path = no_braess.nash()
-n_cost, n_path = braess.nash()
+no_braess.plot_nash()
+# n_cost, n_path = braess.nash()
+braess.plot_nash()

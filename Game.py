@@ -25,7 +25,7 @@ class Game:
     def add_node(self, value):
         self.node.add(value)
 
-    # define start and destination nodes
+    # set start and end nodes
     def path(self, start_node, end_node):
         self.start_node = start_node
         self.end_node = end_node
@@ -36,8 +36,8 @@ class Game:
         self.edge[to_node].append(from_node)
         self.cost[(from_node, to_node)] = cost
         self.cost[(to_node, from_node)] = cost
-        self.num_edge[(from_node, to_node)] = 0  # initialize number of players on edge to 0
-        self.num_edge[(to_node, from_node)] = 0
+        self.num_edge[(from_node, to_node)] = None
+        self.num_edge[(to_node, from_node)] = None
 
     # find the vertex with minimum cost from source, from the set of
     # vertices not yet included in shortest path tree. Determines which
@@ -138,30 +138,35 @@ class Game:
         return cost_pp, path_pp
 
     # plot network
-    def plot(self):
+    def plot_nash(self):
+        # check if nash has been calculated already
+        if next(iter(self.num_edge.items()))[1] is None:
+            self.nash()
+
         # build edge lists
         edges = []
-        costs = []
+        players = []
         for from_node in self.node:
             for to_node in self.edge[from_node]:
                 if to_node not in [item[0] for item in edges]:
                     edges.append([from_node, to_node])
-                    costs.append(self.cost[(from_node, to_node)])
+                    players.append(self.num_edge[(from_node, to_node)])
 
         # setup colormap
-        norm = mpl.colors.Normalize(vmin=min(costs), vmax=max(costs))
+        norm = mpl.colors.Normalize(vmin=0, vmax=self.num_players)
         mapper = cm.ScalarMappable(norm=norm, cmap=plt.get_cmap('jet'))
 
         # build graph and set colors
+        plt.figure()
         G = nx.Graph()
         idx = 0
         for edge in edges:
-            G.add_edge(edge[0], edge[1], color=mapper.to_rgba(costs[idx]))
+            G.add_edge(edge[0], edge[1], color=mapper.to_rgba(players[idx]))
             idx += 1
         colors = nx.get_edge_attributes(G, 'color').values()
         pos = nx.spring_layout(G)
 
         # plot
         nx.draw_networkx(G, pos, with_labels=True, node_color='skyblue', edge_color=colors, node_size=500, width=10.0)
-        plt.colorbar(mapper, label='Cost')
-        plt.title('Congestion Network: ' + self.start_node + ' to ' + self.end_node)
+        plt.colorbar(mapper, label='Number of Players')
+        plt.title('Congestion Game: ' + self.start_node + ' to ' + self.end_node)
