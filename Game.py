@@ -2,6 +2,7 @@ from collections import defaultdict
 import matplotlib as mpl
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider
 import networkx as nx
 
 
@@ -20,6 +21,7 @@ class Game:
         self.add_node(start_node)
         self.end_node = end_node
         self.add_node(end_node)
+        self.s_num = None
 
     # add node
     def add_node(self, value):
@@ -113,14 +115,17 @@ class Game:
         total_cost = cost_log[self.end_node]
         return path, total_cost
 
-    def nash(self):
+    def nash(self, num_players=None):
+        if num_players is None:
+            num_players = self.num_players
+
         # reset number of players on edge to 0
         for key in self.num_edge:
             self.num_edge[key] = 0
 
         # compute Nash through sequential dijkstra best response calculations
         path_pp = []  # path per player
-        for _ in range(self.num_players):
+        for _ in range(num_players):
             path = self.__dijkstra()[0]
             path_pp.append(path)
 
@@ -152,12 +157,15 @@ class Game:
                     edges.append([from_node, to_node])
                     players.append(self.num_edge[(from_node, to_node)])
 
+        # build graph and set colors
+        fig, ax = plt.subplots()
+        plt.title('Congestion Game: ' + self.start_node + ' to ' + self.end_node)
+
         # setup colormap
-        norm = mpl.colors.Normalize(vmin=0, vmax=self.num_players)
+        norm = mpl.colors.Normalize(vmin=0, vmax= 2 * self.num_players)
         mapper = cm.ScalarMappable(norm=norm, cmap=plt.get_cmap('jet'))
 
-        # build graph and set colors
-        plt.figure()
+        # build graph
         G = nx.Graph()
         idx = 0
         for edge in edges:
@@ -167,6 +175,39 @@ class Game:
         pos = nx.spring_layout(G)
 
         # plot
-        nx.draw_networkx(G, pos, with_labels=True, node_color='skyblue', edge_color=colors, node_size=500, width=10.0)
-        plt.colorbar(mapper, label='Number of Players')
-        plt.title('Congestion Game: ' + self.start_node + ' to ' + self.end_node)
+        nx.draw_networkx(G, pos, ax=ax, with_labels=True, node_color='skyblue', edge_color=colors, node_size=500, width=10.0)
+        plt.colorbar(mapper, label='# of Players')
+
+        # setup widget
+        axcolor = 'lightgoldenrodyellow'
+        axnum = plt.axes([0.2, 0.05, 0.65, 0.03], facecolor=axcolor)
+        self.s_num = Slider(axnum, 'Total Players', 1, 2 * self.num_players, valinit=self.num_players, valstep=1)
+
+        def update(val):
+            num_players = self.s_num.val
+            self.nash(num_players)
+
+            # build edge lists
+            edges = []
+            players = []
+            for from_node in self.node:
+                for to_node in self.edge[from_node]:
+                    if to_node not in [item[0] for item in edges]:
+                        edges.append([from_node, to_node])
+                        players.append(self.num_edge[(from_node, to_node)])
+
+            # build graph
+            idx = 0
+            for edge in edges:
+                G.add_edge(edge[0], edge[1], color=mapper.to_rgba(players[idx]))
+                idx += 1
+            colors = nx.get_edge_attributes(G, 'color').values()
+
+            # re-draw
+            ax.clear()
+            nx.draw_networkx(G, pos, ax=ax, with_labels=True, node_color='skyblue', edge_color=colors, node_size=500,
+                             width=10.0)
+            ax.set_title('Congestion Game: ' + self.start_node + ' to ' + self.end_node)
+            fig.canvas.draw()
+
+        self.s_num.on_changed(update)
