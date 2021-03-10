@@ -43,7 +43,7 @@ class Game:
     # vertices not yet included in shortest path tree. Determines which
     # branch to explore next
     @staticmethod
-    def min_cost(cost, node_set):
+    def __min_cost(cost, node_set):
         # initialize minimum cost for next node
         min_cost = float('inf')
         min_node = None
@@ -58,7 +58,7 @@ class Game:
         return min_node, min_cost
 
     # Dijkstra's algorithm
-    def dijkstra(self):
+    def __dijkstra(self):
         # dynamic node set
         node_set = set(self.node)
 
@@ -73,7 +73,7 @@ class Game:
 
         while node_set:
             # find node with minimum cost
-            min_node, min_cost = self.min_cost(cost_log, node_set)
+            min_node, min_cost = self.__min_cost(cost_log, node_set)
 
             # remove minimum node from set
             node_set.remove(min_node)
@@ -114,10 +114,14 @@ class Game:
         return path, total_cost
 
     def nash(self):
+        # reset number of players on edge to 0
+        for key in self.num_edge:
+            self.num_edge[key] = 0
+
         # compute Nash through sequential dijkstra best response calculations
         path_pp = []  # path per player
         for _ in range(self.num_players):
-            path = self.dijkstra()[0]
+            path = self.__dijkstra()[0]
             path_pp.append(path)
 
         # sum up cost to each player after all players have played
