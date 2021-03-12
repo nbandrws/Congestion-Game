@@ -171,11 +171,21 @@ class Game:
         for edge in edges:
             G.add_edge(edge[0], edge[1], color=mapper.to_rgba(players[idx]))
             idx += 1
-        colors = nx.get_edge_attributes(G, 'color').values()
+        edge_color = nx.get_edge_attributes(G, 'color').values()
         pos = nx.spring_layout(G)
 
+        # set node color
+        node_color = []
+        for node in G:
+            if node is self.start_node:
+                node_color.append('red')
+            elif node is self.end_node:
+                node_color.append('lime')
+            else:
+                node_color.append('skyblue')
+
         # plot
-        nx.draw_networkx(G, pos, ax=ax, with_labels=True, node_color='skyblue', edge_color=colors, node_size=500, width=10.0)
+        nx.draw_networkx(G, pos, ax=ax, with_labels=True, node_color=node_color, edge_color=edge_color, node_size=500, width=10.0)
         plt.colorbar(mapper, label='# of Players')
 
         # setup widget
@@ -201,11 +211,11 @@ class Game:
             for edge in edges:
                 G.add_edge(edge[0], edge[1], color=mapper.to_rgba(players[idx]))
                 idx += 1
-            colors = nx.get_edge_attributes(G, 'color').values()
+            edge_color = nx.get_edge_attributes(G, 'color').values()
 
             # re-draw
             ax.clear()
-            nx.draw_networkx(G, pos, ax=ax, with_labels=True, node_color='skyblue', edge_color=colors, node_size=500,
+            nx.draw_networkx(G, pos, ax=ax, with_labels=True, node_color=node_color, edge_color=edge_color, node_size=500,
                              width=10.0)
             ax.set_title('Congestion Game: ' + self.start_node + ' to ' + self.end_node)
             fig.canvas.draw()
