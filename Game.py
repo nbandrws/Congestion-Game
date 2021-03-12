@@ -144,9 +144,8 @@ class Game:
 
     # plot network
     def plot_nash(self):
-        # check if nash has been calculated already
-        if next(iter(self.num_edge.items()))[1] is None:
-            self.nash()
+        # calculate nash
+        cost_pp = self.nash()[0]
 
         # build edge lists
         edges = []
@@ -158,8 +157,11 @@ class Game:
                     players.append(self.num_edge[(from_node, to_node)])
 
         # build graph and set colors
-        fig, ax = plt.subplots()
-        plt.title('Congestion Game: ' + self.start_node + ' to ' + self.end_node)
+        fig = plt.figure(figsize=(12, 6))
+        gs = fig.add_gridspec(1, 3)
+        ax0 = fig.add_subplot(gs[0, 0])
+        ax1 = fig.add_subplot(gs[0, 1:])
+        fig.suptitle('Congestion Game: ' + self.start_node + ' to ' + self.end_node)
 
         # setup colormap
         norm = mpl.colors.Normalize(vmin=0, vmax= 2 * self.num_players)
@@ -178,24 +180,29 @@ class Game:
         node_color = []
         for node in G:
             if node is self.start_node:
-                node_color.append('red')
-            elif node is self.end_node:
                 node_color.append('lime')
+            elif node is self.end_node:
+                node_color.append('red')
             else:
                 node_color.append('skyblue')
 
-        # plot
-        nx.draw_networkx(G, pos, ax=ax, with_labels=True, node_color=node_color, edge_color=edge_color, node_size=500, width=10.0)
+        # plot network
+        nx.draw_networkx(G, pos, ax=ax1, with_labels=True, node_color=node_color, edge_color=edge_color, node_size=500, width=10.0)
         plt.colorbar(mapper, label='# of Players')
+
+        # plot histogram
+        ax0.hist(cost_pp)
+        ax0.set_xlabel('Cost')
+        ax0.set_ylabel('# of Players')
 
         # setup widget
         axcolor = 'lightgoldenrodyellow'
-        axnum = plt.axes([0.2, 0.05, 0.65, 0.03], facecolor=axcolor)
+        axnum = plt.axes([0.2, 0.9, 0.65, 0.03], facecolor=axcolor)
         self.s_num = Slider(axnum, 'Total Players', 1, 2 * self.num_players, valinit=self.num_players, valstep=1)
 
         def update(val):
             num_players = self.s_num.val
-            self.nash(num_players)
+            cost_pp = self.nash(num_players)[0]
 
             # build edge lists
             edges = []
@@ -213,11 +220,15 @@ class Game:
                 idx += 1
             edge_color = nx.get_edge_attributes(G, 'color').values()
 
-            # re-draw
-            ax.clear()
-            nx.draw_networkx(G, pos, ax=ax, with_labels=True, node_color=node_color, edge_color=edge_color, node_size=500,
+            # re-draw network
+            ax1.clear()
+            nx.draw_networkx(G, pos, ax=ax1, with_labels=True, node_color=node_color, edge_color=edge_color, node_size=500,
                              width=10.0)
-            ax.set_title('Congestion Game: ' + self.start_node + ' to ' + self.end_node)
-            fig.canvas.draw()
+
+            # re-draw histogram
+            ax0.clear()
+            ax0.hist(cost_pp)
+            ax0.set_xlabel('Cost')
+            ax0.set_ylabel('# of Players')
 
         self.s_num.on_changed(update)
