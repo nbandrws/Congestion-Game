@@ -1,3 +1,5 @@
+# nash method returns cost and route per player
+# plot_nash method returns figure
 from collections import defaultdict
 import matplotlib as mpl
 import matplotlib.cm as cm

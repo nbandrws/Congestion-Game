@@ -1,3 +1,4 @@
+# dummy example where cost functions are independent of number of players
 from Game import Game
 
 
